@@ -1,4 +1,4 @@
-module auto-launcher
+module github.com/ant1k9/auto-launcher
 
 go 1.16
 

@@ -2,4 +2,4 @@
 all: build
 
 build:
-	go build -o ./bin/auto-launcher
+	go build -o ./bin/auto-launcher cmd/al/main.go
