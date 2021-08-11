@@ -10,16 +10,13 @@ import (
 
 func main() {
 	_, err := os.Stat(".run")
-
-	switch {
-	case os.IsNotExist(err):
+	if os.IsNotExist(err) {
 		err = discover.ChooseExecutable()
 	}
 
 	if err == nil {
 		cmd := exec.Command("/usr/bin/env", "bash", discover.RunFile)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		err = cmd.Run()
 	}
 
