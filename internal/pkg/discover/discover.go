@@ -68,9 +68,9 @@ func isExecutable(path string, info fs.FileInfo) bool {
 	}
 }
 
-func getExecutables() (map[Extension]Filename, error) {
+func getExecutables(root string) (map[Extension]Filename, error) {
 	files := make(map[Extension]Filename)
-	return files, filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
+	return files, filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if isServicePath(path) {
 			return filepath.SkipDir
 		}

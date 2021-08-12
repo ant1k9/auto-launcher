@@ -11,21 +11,25 @@ import (
 
 const RunFile = ".run"
 
-func saveExecutable(ext, path string) error {
-	var command string
+func prepareCommand(ext, path string) string {
 	switch ext {
 	case ".c":
-		command = "gcc -O2 -o main " + path + " && ./main"
+		return "gcc -O2 -o main " + path + " && ./main"
 	case ".cpp":
-		command = "g++ -O2 -std=c++17 -o main " + path + " && ./main"
+		return "g++ -O2 -std=c++17 -o main " + path + " && ./main"
 	case ".rs":
-		command = "cargo run"
+		return "cargo run"
 	case ".go":
-		command = "go run " + path
+		return "go run " + path
 	case "Makefile", ".mk":
-		command = "make"
+		return "make"
+	default:
+		return ""
 	}
+}
 
+func saveExecutable(ext, path string) error {
+	command := prepareCommand(ext, path)
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 
@@ -70,7 +74,7 @@ func chooseInteractive(executables map[Extension]Filename) error {
 }
 
 func ChooseExecutable() error {
-	executables, err := getExecutables()
+	executables, err := getExecutables(".")
 	if err != nil {
 		return err
 	}
