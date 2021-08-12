@@ -22,6 +22,8 @@ func saveExecutable(ext, path string) error {
 		command = "cargo run"
 	case ".go":
 		command = "go run " + path
+	case "Makefile", ".mk":
+		command = "make"
 	}
 
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)

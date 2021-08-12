@@ -1,26 +1,39 @@
 package main
 
 import (
-	"log"
 	"os"
-	"os/exec"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/ant1k9/auto-launcher/internal/pkg/discover"
+	"github.com/ant1k9/auto-launcher/internal/pkg/utils"
+)
+
+var (
+	app  = kingpin.New("auto-launcher", "Auto discover and launch executable files")
+	post = app.Command("edit", "Edit launch command")
+	rm   = app.Command("rm", "Remove launch command")
 )
 
 func main() {
-	_, err := os.Stat(".run")
-	if os.IsNotExist(err) {
-		err = discover.ChooseExecutable()
+	if len(os.Args) > 1 {
+		switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+		case post.FullCommand():
+			utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "vim", discover.RunFile))
+		case rm.FullCommand():
+			_ = os.Remove(discover.RunFile)
+		}
+		return
 	}
 
-	if err == nil {
-		cmd := exec.Command("/usr/bin/env", "bash", discover.RunFile)
-		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-		err = cmd.Run()
-	}
+	// by default run command
+	{
+		_, err := os.Stat(".utils.Run")
+		if os.IsNotExist(err) {
+			err = discover.ChooseExecutable()
+		}
+		utils.FatalIfErr(err)
 
-	if err != nil {
-		log.Fatal(err)
+		utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "bash", discover.RunFile))
 	}
 }
