@@ -29,7 +29,7 @@ func prepareCommand(ext, path string) string {
 }
 
 func saveExecutable(ext, path string) error {
-	command := prepareCommand(ext, path)
+	command := prepareCommand(ext, path) + " $*"
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 

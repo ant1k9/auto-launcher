@@ -16,6 +16,13 @@ var (
 )
 
 func main() {
+	// pass arguments to exec command
+	var extraArgs []string
+	if len(os.Args) > 1 && os.Args[1] == "--" {
+		extraArgs = os.Args[2:]
+		os.Args = os.Args[:1]
+	}
+
 	if len(os.Args) > 1 {
 		switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 		case post.FullCommand():
@@ -34,6 +41,9 @@ func main() {
 		}
 		utils.FatalIfErr(err)
 
-		utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "bash", discover.RunFile))
+		utils.FatalIfErr(utils.RunCommand(
+			"/usr/bin/env",
+			append([]string{"bash", discover.RunFile}, extraArgs...)...),
+		)
 	}
 }
