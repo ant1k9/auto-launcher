@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 
+	"github.com/ant1k9/auto-launcher/internal/config"
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 )
@@ -73,8 +74,8 @@ func chooseInteractive(executables map[Extension]Filename) error {
 	}
 }
 
-func ChooseExecutable() error {
-	executables, err := getExecutables(".")
+func ChooseExecutable(cfg config.Config) error {
+	executables, err := getExecutables(".", cfg)
 	if err != nil {
 		return err
 	}

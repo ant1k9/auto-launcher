@@ -1,0 +1,1 @@
+skip_paths = [ ".git", "test", "target", ".ccls", "node-modules" ]

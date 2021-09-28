@@ -5,13 +5,14 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/ant1k9/auto-launcher/internal/config"
 	"github.com/ant1k9/auto-launcher/internal/pkg/discover"
 	"github.com/ant1k9/auto-launcher/internal/pkg/utils"
 )
 
 var (
 	app  = kingpin.New("auto-launcher", "Auto discover and launch executable files")
-	post = app.Command("edit", "Edit launch command")
+	edit = app.Command("edit", "Edit launch command")
 	rm   = app.Command("rm", "Remove launch command")
 )
 
@@ -25,7 +26,7 @@ func main() {
 
 	if len(os.Args) > 1 {
 		switch kingpin.MustParse(app.Parse(os.Args[1:])) {
-		case post.FullCommand():
+		case edit.FullCommand():
 			utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "vim", discover.RunFile))
 		case rm.FullCommand():
 			_ = os.Remove(discover.RunFile)
@@ -37,7 +38,7 @@ func main() {
 	{
 		_, err := os.Stat(discover.RunFile)
 		if os.IsNotExist(err) {
-			err = discover.ChooseExecutable()
+			err = discover.ChooseExecutable(config.GetConfig())
 		}
 		utils.FatalIfErr(err)
 

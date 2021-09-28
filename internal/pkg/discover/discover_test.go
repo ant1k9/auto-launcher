@@ -7,6 +7,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/ant1k9/auto-launcher/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,6 +84,17 @@ all:
 				"Makefile": "Makefile",
 			},
 		},
+		{
+			name:        "python executable",
+			genFilename: "exec.py",
+			genContent: `
+if __name__ == "__main__":
+	print("Hello")
+`,
+			want: map[string]string{
+				".py": "exec.py",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,7 +108,7 @@ all:
 				fs.ModePerm,
 			)
 
-			got, err := getExecutables(rootPath)
+			got, err := getExecutables(rootPath, config.Config{})
 			require.NoError(t, err)
 
 			assert.Len(t, got, len(tt.want))
