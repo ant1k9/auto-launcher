@@ -4,7 +4,7 @@
 ### Installation
 
 ```bash
-$ go get github.com/ant1k9/auto-launcher/cmd/...
+$ go install github.com/ant1k9/auto-launcher@latest
 ```
 
 ### Usage
