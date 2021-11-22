@@ -1,7 +1,6 @@
 package discover
 
 import (
-	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
@@ -74,8 +73,8 @@ func isExecutable(path string, info fs.FileInfo) bool {
 	}
 }
 
-func getExecutables(root string, cfg config.Config) (map[Extension]Filename, error) {
-	files := make(map[Extension]Filename)
+func getExecutables(root string, cfg config.Config) (map[Extension][]Filename, error) {
+	files := make(map[Extension][]Filename)
 	return files, filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if isSkippedPath(path, cfg) {
 			return filepath.SkipDir
@@ -83,13 +82,7 @@ func getExecutables(root string, cfg config.Config) (map[Extension]Filename, err
 
 		if isExecutable(path, info) {
 			extension := getExtension(info.Name())
-			if f, ok := files[getExtension(extension)]; ok {
-				return fmt.Errorf(
-					"several files with <%s> extension: %s, %s",
-					extension, f, path,
-				)
-			}
-			files[extension] = path
+			files[extension] = append(files[extension], path)
 		}
 		return err
 	})

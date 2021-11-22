@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"regexp"
 
 	"github.com/ant1k9/auto-launcher/internal/config"
 	ui "github.com/gizak/termui/v3"
@@ -11,6 +12,8 @@ import (
 )
 
 const RunFile = ".run"
+
+var listedPathsPattern = regexp.MustCompile(`\d+\. (.*)`)
 
 func prepareCommand(ext, path string) string {
 	switch ext {
@@ -20,6 +23,10 @@ func prepareCommand(ext, path string) string {
 		return "g++ -O2 -std=c++17 -o main " + path + " && ./main"
 	case ".rs":
 		return "cargo run"
+	case ".py":
+		return "python " + path
+	case ".js":
+		return "node " + path
 	case ".go":
 		return "go run " + path
 	case "Makefile", ".mk":
@@ -34,7 +41,7 @@ func saveExecutable(ext, path string) error {
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 
-func chooseInteractive(executables map[Extension]Filename) error {
+func chooseInteractive(executables map[Extension][]Filename) error {
 	if err := ui.Init(); err != nil {
 		return fmt.Errorf("failed to initialize termui: %v", err)
 	}
@@ -43,9 +50,11 @@ func chooseInteractive(executables map[Extension]Filename) error {
 	extensions := make([]string, 0, len(executables))
 	l := widgets.NewList()
 	l.Title = "Choose executable to run further:\n"
-	for ext, path := range executables {
-		l.Rows = append(l.Rows, fmt.Sprintf("%d. %s", len(l.Rows)+1, path))
-		extensions = append(extensions, ext)
+	for ext, paths := range executables {
+		for _, path := range paths {
+			l.Rows = append(l.Rows, fmt.Sprintf("%d. %s", len(l.Rows)+1, path))
+			extensions = append(extensions, ext)
+		}
 	}
 
 	l.SetRect(0, 0, 50, 10)
@@ -60,10 +69,10 @@ func chooseInteractive(executables map[Extension]Filename) error {
 		case "q", "<C-c>":
 			return nil
 		case "<Enter>":
-			return saveExecutable(
-				extensions[l.SelectedRow],
-				executables[extensions[l.SelectedRow]],
-			)
+			if m := listedPathsPattern.FindStringSubmatch(l.Rows[l.SelectedRow]); len(m) > 0 {
+				return saveExecutable(extensions[l.SelectedRow], m[1])
+			}
+			return fmt.Errorf("unexpected row data: %s", l.Rows[l.SelectedRow])
 		case "j", "<Down>":
 			l.ScrollDown()
 		case "k", "<Up>":
@@ -80,8 +89,10 @@ func ChooseExecutable(cfg config.Config) error {
 	}
 
 	if len(executables) == 1 {
-		for ext, path := range executables {
-			return saveExecutable(ext, path)
+		for ext, paths := range executables {
+			if len(paths) == 1 {
+				return saveExecutable(ext, paths[0])
+			}
 		}
 	}
 

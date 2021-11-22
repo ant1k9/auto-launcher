@@ -50,6 +50,18 @@ func Test_prepareCommand(t *testing.T) {
 			want: "make",
 		},
 		{
+			name: "python command",
+			ext:  ".py",
+			path: "main.py",
+			want: "python main.py",
+		},
+		{
+			name: "javascript command",
+			ext:  ".js",
+			path: "main.js",
+			want: "node main.js",
+		},
+		{
 			name: "Unknown command",
 			ext:  ".abc",
 			path: "file.abc",

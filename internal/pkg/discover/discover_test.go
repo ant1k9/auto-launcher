@@ -17,7 +17,7 @@ func Test_getExecutables(t *testing.T) {
 		name        string
 		genFilename string
 		genContent  string
-		want        map[Extension]Filename
+		want        map[Extension][]Filename
 	}{
 		{
 			name:        "go executable",
@@ -27,8 +27,8 @@ package main
 
 func main()	{}
 `,
-			want: map[string]string{
-				".go": "main.go",
+			want: map[string][]string{
+				".go": {"main.go"},
 			},
 		},
 		{
@@ -39,7 +39,7 @@ package main
 
 func init()	{}
 `,
-			want: map[string]string{},
+			want: map[string][]string{},
 		},
 		{
 			name:        "rust executable",
@@ -48,8 +48,8 @@ func init()	{}
 fn main() {
 }
 `,
-			want: map[string]string{
-				".rs": "main.rs",
+			want: map[string][]string{
+				".rs": {"main.rs"},
 			},
 		},
 		{
@@ -59,8 +59,8 @@ fn main() {
 int main() {
 }
 `,
-			want: map[string]string{
-				".cpp": "main.cpp",
+			want: map[string][]string{
+				".cpp": {"main.cpp"},
 			},
 		},
 		{
@@ -69,8 +69,8 @@ int main() {
 			genContent: `
 echo
 `,
-			want: map[string]string{
-				".sh": "script.sh",
+			want: map[string][]string{
+				".sh": {"script.sh"},
 			},
 		},
 		{
@@ -80,8 +80,8 @@ echo
 .PHONY: all
 all:
 `,
-			want: map[string]string{
-				"Makefile": "Makefile",
+			want: map[string][]string{
+				"Makefile": {"Makefile"},
 			},
 		},
 		{
@@ -91,15 +91,15 @@ all:
 if __name__ == "__main__":
 	print("Hello")
 `,
-			want: map[string]string{
-				".py": "exec.py",
+			want: map[string][]string{
+				".py": {"exec.py"},
 			},
 		},
 		{
 			name:        "no executables",
 			genFilename: "file.txt",
 			genContent:  `Hello world!`,
-			want:        map[string]string{},
+			want:        map[string][]string{},
 		},
 	}
 	for _, tt := range tests {
@@ -122,7 +122,9 @@ if __name__ == "__main__":
 
 			assert.Len(t, got, len(tt.want))
 			for k, v := range tt.want {
-				assert.Equal(t, path.Join(rootPath, v), got[k])
+				assert.EqualValues(t,
+					[]string{path.Join(rootPath, v[0])}, got[k],
+				)
 			}
 		})
 	}
@@ -133,7 +135,7 @@ func Test_skipPaths(t *testing.T) {
 		name        string
 		genFilename string
 		genContent  string
-		want        map[Extension]Filename
+		want        map[Extension][]Filename
 	}{
 		{
 			name:        "go executable",
@@ -143,8 +145,8 @@ package main
 
 func main()	{}
 `,
-			want: map[string]string{
-				".go": "main.go",
+			want: map[string][]string{
+				".go": {"main.go"},
 			},
 		},
 	}
@@ -157,18 +159,14 @@ func main()	{}
 			err = os.Mkdir(path.Join(rootPath, "test"), 0755)
 			require.NoError(t, err)
 
-			require.NoError(t, ioutil.WriteFile(
+			for _, p := range []string{
 				path.Join(rootPath, tt.genFilename),
-				[]byte(tt.genContent),
-				fs.ModePerm,
-			))
-
-			// write to a skip path by confg
-			require.NoError(t, ioutil.WriteFile(
 				path.Join(rootPath, "test", tt.genFilename),
-				[]byte(tt.genContent),
-				fs.ModePerm,
-			))
+			} {
+				require.NoError(t,
+					ioutil.WriteFile(p, []byte(tt.genContent), fs.ModePerm),
+				)
+			}
 
 			got, err := getExecutables(rootPath, config.Config{
 				SkipPaths: []string{"test"},
@@ -177,7 +175,9 @@ func main()	{}
 
 			assert.Len(t, got, len(tt.want))
 			for k, v := range tt.want {
-				assert.Equal(t, path.Join(rootPath, v), got[k])
+				assert.EqualValues(t,
+					[]string{path.Join(rootPath, v[0])}, got[k],
+				)
 			}
 		})
 	}
