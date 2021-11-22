@@ -24,7 +24,7 @@ type (
 
 func isSkippedPath(path string, cfg config.Config) bool {
 	for _, skipPath := range cfg.SkipPaths {
-		if path == skipPath {
+		if filepath.Base(path) == skipPath {
 			return true
 		}
 	}

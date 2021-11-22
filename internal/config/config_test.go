@@ -26,6 +26,6 @@ func TestGetConfig(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	os.Setenv(EnvConfigPath, tmpFile.Name())
+	os.Setenv(envConfigPath, tmpFile.Name())
 	assert.EqualValues(t, want, GetConfig())
 }

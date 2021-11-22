@@ -95,6 +95,12 @@ if __name__ == "__main__":
 				".py": "exec.py",
 			},
 		},
+		{
+			name:        "no executables",
+			genFilename: "file.txt",
+			genContent:  `Hello world!`,
+			want:        map[string]string{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -102,13 +108,71 @@ if __name__ == "__main__":
 			require.NoError(t, err)
 			defer os.RemoveAll(rootPath)
 
-			ioutil.WriteFile(
+			err = os.Mkdir(path.Join(rootPath, ".git"), 0755)
+			require.NoError(t, err)
+
+			require.NoError(t, ioutil.WriteFile(
 				path.Join(rootPath, tt.genFilename),
 				[]byte(tt.genContent),
 				fs.ModePerm,
-			)
+			))
 
 			got, err := getExecutables(rootPath, config.Config{})
+			require.NoError(t, err)
+
+			assert.Len(t, got, len(tt.want))
+			for k, v := range tt.want {
+				assert.Equal(t, path.Join(rootPath, v), got[k])
+			}
+		})
+	}
+}
+
+func Test_skipPaths(t *testing.T) {
+	tests := []struct {
+		name        string
+		genFilename string
+		genContent  string
+		want        map[Extension]Filename
+	}{
+		{
+			name:        "go executable",
+			genFilename: "main.go",
+			genContent: `
+package main
+
+func main()	{}
+`,
+			want: map[string]string{
+				".go": "main.go",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootPath, err := ioutil.TempDir("/tmp", "discover-test")
+			require.NoError(t, err)
+			defer os.RemoveAll(rootPath)
+
+			err = os.Mkdir(path.Join(rootPath, "test"), 0755)
+			require.NoError(t, err)
+
+			require.NoError(t, ioutil.WriteFile(
+				path.Join(rootPath, tt.genFilename),
+				[]byte(tt.genContent),
+				fs.ModePerm,
+			))
+
+			// write to a skip path by confg
+			require.NoError(t, ioutil.WriteFile(
+				path.Join(rootPath, "test", tt.genFilename),
+				[]byte(tt.genContent),
+				fs.ModePerm,
+			))
+
+			got, err := getExecutables(rootPath, config.Config{
+				SkipPaths: []string{"test"},
+			})
 			require.NoError(t, err)
 
 			assert.Len(t, got, len(tt.want))

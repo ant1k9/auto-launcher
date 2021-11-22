@@ -60,11 +60,10 @@ func chooseInteractive(executables map[Extension]Filename) error {
 		case "q", "<C-c>":
 			return nil
 		case "<Enter>":
-			saveExecutable(
+			return saveExecutable(
 				extensions[l.SelectedRow],
 				executables[extensions[l.SelectedRow]],
 			)
-			return nil
 		case "j", "<Down>":
 			l.ScrollDown()
 		case "k", "<Up>":
