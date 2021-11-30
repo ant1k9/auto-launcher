@@ -35,13 +35,13 @@ func Test_prepareCommand(t *testing.T) {
 			name: "c++ command",
 			ext:  ".cpp",
 			path: "main.cpp",
-			want: "g++ -O2 -std=c++17 -o main main.cpp && ./main",
+			want: "g++ -O2 -std=c++17 -o main *.cpp && ./main",
 		},
 		{
 			name: "c command",
 			ext:  ".c",
 			path: "main.c",
-			want: "gcc -O2 -o main main.c && ./main",
+			want: "gcc -O2 -o main *.c && ./main",
 		},
 		{
 			name: "Makefile command",

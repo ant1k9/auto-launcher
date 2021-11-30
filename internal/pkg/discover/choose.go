@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"path/filepath"
 	"regexp"
 
 	"github.com/ant1k9/auto-launcher/internal/config"
@@ -18,9 +19,11 @@ var listedPathsPattern = regexp.MustCompile(`\d+\. (.*)`)
 func prepareCommand(ext, path string) string {
 	switch ext {
 	case ".c":
-		return "gcc -O2 -o main " + path + " && ./main"
+		cFiles := filepath.Join(filepath.Dir(path), "*.c")
+		return "gcc -O2 -o main " + cFiles + " && ./main"
 	case ".cpp":
-		return "g++ -O2 -std=c++17 -o main " + path + " && ./main"
+		cppFiles := filepath.Join(filepath.Dir(path), "*.cpp")
+		return "g++ -O2 -std=c++17 -o main " + cppFiles + " && ./main"
 	case ".rs":
 		return "cargo run"
 	case ".py":
