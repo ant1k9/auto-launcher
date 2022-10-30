@@ -39,6 +39,10 @@ func prepareCommand(ext, path string) (string, error) {
 		return fmt.Sprintf("node %s %s", path, BashArgs), nil
 	case ".go":
 		return fmt.Sprintf("go run %s %s", path, BashArgs), nil
+	case ".sh":
+		return fmt.Sprintf("bash %s %s", path, BashArgs), nil
+	case ".fish":
+		return fmt.Sprintf("fish %s %s", path, BashArgs), nil
 	case Makefile, ".mk":
 		return "make " + BashArgs, nil
 	case Dockerfile:

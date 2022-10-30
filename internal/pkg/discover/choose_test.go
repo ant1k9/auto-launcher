@@ -77,6 +77,18 @@ func Test_prepareCommand(t *testing.T) {
 			),
 		},
 		{
+			name: "bash command",
+			ext:  ".sh",
+			path: "main.sh",
+			want: "bash main.sh $*",
+		},
+		{
+			name: "fish command",
+			ext:  ".fish",
+			path: "main.fish",
+			want: "fish main.fish $*",
+		},
+		{
 			name: "Unknown command",
 			ext:  ".abc",
 			path: "file.abc",

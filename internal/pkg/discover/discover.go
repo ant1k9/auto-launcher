@@ -66,7 +66,7 @@ func isExecutable(path string, info fs.FileInfo) bool {
 		return isGoExecutable(path)
 	case ".py":
 		return isPythonExecutable(path)
-	case "fish", ".sh", ".js", ".mk", Makefile, Dockerfile:
+	case ".fish", ".sh", ".js", ".mk", Makefile, Dockerfile:
 		return true // we cannot say is it a script or a package
 	default:
 		return false

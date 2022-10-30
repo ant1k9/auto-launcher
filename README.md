@@ -28,3 +28,4 @@ $ AUTO_LAUNCHER_CONFIG_PATH=config.example.toml auto-launcher  # use custom conf
  - Makefile
  - JavaScript
  - Bash, Fish
+ - Dockerfile
