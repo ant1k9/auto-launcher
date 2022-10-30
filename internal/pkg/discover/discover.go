@@ -45,7 +45,7 @@ func isRustExecutable(path string) bool   { return hasMain(path, RustMainDecl) }
 
 func getExtension(path string) string {
 	switch path {
-	case "Makefile":
+	case Makefile:
 		return path
 	default:
 		return filepath.Ext(path)
@@ -66,7 +66,7 @@ func isExecutable(path string, info fs.FileInfo) bool {
 		return isGoExecutable(path)
 	case ".py":
 		return isPythonExecutable(path)
-	case "fish", ".sh", ".js", ".mk", "Makefile":
+	case "fish", ".sh", ".js", ".mk", Makefile:
 		return true // we cannot say is it a script or a package
 	default:
 		return false

@@ -32,7 +32,7 @@ func prepareCommand(ext, path string) string {
 		return "node " + path
 	case ".go":
 		return "go run " + path
-	case "Makefile", ".mk":
+	case Makefile, ".mk":
 		return "make"
 	default:
 		return ""
@@ -44,26 +44,15 @@ func saveExecutable(ext, path string) error {
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 
+// nolint: maintidx
 func chooseInteractive(executables map[Extension][]Filename) error {
 	if err := ui.Init(); err != nil {
-		return fmt.Errorf("failed to initialize termui: %v", err)
+		return fmt.Errorf("failed to initialize termui: %w", err)
 	}
 	defer ui.Close()
 
-	extensions := make([]string, 0, len(executables))
-	l := widgets.NewList()
-	l.Title = "Choose executable to run further:\n"
-	for ext, paths := range executables {
-		for _, path := range paths {
-			l.Rows = append(l.Rows, fmt.Sprintf("%d. %s", len(l.Rows)+1, path))
-			extensions = append(extensions, ext)
-		}
-	}
-
-	l.SetRect(0, 0, 50, 10)
-	l.SelectedRowStyle = ui.NewStyle(ui.ColorGreen)
-
-	ui.Render(l)
+	extensions, widgetsList := prepareWidgetsList(executables)
+	ui.Render(widgetsList)
 	uiEvents := ui.PollEvents()
 
 	for {
@@ -72,17 +61,35 @@ func chooseInteractive(executables map[Extension][]Filename) error {
 		case "q", "<C-c>":
 			return nil
 		case "<Enter>":
-			if m := listedPathsPattern.FindStringSubmatch(l.Rows[l.SelectedRow]); len(m) > 0 {
-				return saveExecutable(extensions[l.SelectedRow], m[1])
+			if m := listedPathsPattern.FindStringSubmatch(widgetsList.Rows[widgetsList.SelectedRow]); len(m) > 0 {
+				return saveExecutable(extensions[widgetsList.SelectedRow], m[1])
 			}
-			return fmt.Errorf("unexpected row data: %s", l.Rows[l.SelectedRow])
+			return fmt.Errorf("unexpected row data: %s", widgetsList.Rows[widgetsList.SelectedRow])
 		case "j", "<Down>":
-			l.ScrollDown()
+			widgetsList.ScrollDown()
 		case "k", "<Up>":
-			l.ScrollUp()
+			widgetsList.ScrollUp()
 		}
-		ui.Render(l)
+		ui.Render(widgetsList)
 	}
+}
+
+func prepareWidgetsList(executables map[Extension][]Filename) ([]string, *widgets.List) {
+	extensions := make([]string, 0, len(executables))
+
+	widgetsList := widgets.NewList()
+	widgetsList.Title = "Choose executable to run further:\n"
+	for ext, paths := range executables {
+		for _, path := range paths {
+			widgetsList.Rows = append(widgetsList.Rows, fmt.Sprintf("%d. %s", len(widgetsList.Rows)+1, path))
+			extensions = append(extensions, ext)
+		}
+	}
+
+	widgetsList.SetRect(0, 0, 50, 10) // nolint: gomnd
+	widgetsList.SelectedRowStyle = ui.NewStyle(ui.ColorGreen)
+
+	return extensions, widgetsList
 }
 
 func ChooseExecutable(cfg config.Config) error {

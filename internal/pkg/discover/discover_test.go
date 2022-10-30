@@ -74,14 +74,14 @@ echo
 			},
 		},
 		{
-			name:        "Makefile",
-			genFilename: "Makefile",
+			name:        Makefile,
+			genFilename: Makefile,
 			genContent: `
 .PHONY: all
 all:
 `,
 			want: map[string][]string{
-				"Makefile": {"Makefile"},
+				Makefile: {Makefile},
 			},
 		},
 		{

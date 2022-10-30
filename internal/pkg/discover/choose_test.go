@@ -45,8 +45,8 @@ func Test_prepareCommand(t *testing.T) {
 		},
 		{
 			name: "Makefile command",
-			ext:  "Makefile",
-			path: "Makefile",
+			ext:  Makefile,
+			path: Makefile,
 			want: "make",
 		},
 		{
