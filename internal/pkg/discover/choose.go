@@ -1,9 +1,11 @@
 package discover
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -14,33 +16,57 @@ import (
 
 const RunFile = ".run"
 
-var listedPathsPattern = regexp.MustCompile(`\d+\. (.*)`)
+var (
+	listedPathsPattern = regexp.MustCompile(`\d+\. (.*)`)
 
-func prepareCommand(ext, path string) string {
+	ErrCommandNotFound = errors.New("command not found")
+)
+
+// nolint: maintidx
+func prepareCommand(ext, path string) (string, error) {
 	switch ext {
 	case ".c":
 		cFiles := filepath.Join(filepath.Dir(path), "*.c")
-		return "gcc -O2 -o main " + cFiles + " && ./main"
+		return "gcc -O2 -o main " + cFiles + " && ./main " + BashArgs, nil
 	case ".cpp":
 		cppFiles := filepath.Join(filepath.Dir(path), "*.cpp")
-		return "g++ -O2 -std=c++17 -o main " + cppFiles + " && ./main"
+		return "g++ -O2 -std=c++17 -o main " + cppFiles + " && ./main " + BashArgs, nil
 	case ".rs":
-		return "cargo run"
+		return "cargo run " + BashArgs, nil
 	case ".py":
-		return "python " + path
+		return fmt.Sprintf("python %s %s", path, BashArgs), nil
 	case ".js":
-		return "node " + path
+		return fmt.Sprintf("node %s %s", path, BashArgs), nil
 	case ".go":
-		return "go run " + path
+		return fmt.Sprintf("go run %s %s", path, BashArgs), nil
 	case Makefile, ".mk":
-		return "make"
+		return "make " + BashArgs, nil
+	case Dockerfile:
+		return prepareDockerCommand()
 	default:
-		return ""
+		return "", ErrCommandNotFound
 	}
 }
 
+func prepareDockerCommand() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	baseDir := filepath.Base(dir)
+	return fmt.Sprintf(
+		"docker build -t %[1]s:local .\ndocker run --rm -ti %[2]s %[1]s:local",
+		baseDir, BashArgs,
+	), nil
+}
+
 func saveExecutable(ext, path string) error {
-	command := prepareCommand(ext, path) + " $*"
+	command, err := prepareCommand(ext, path)
+	if err != nil {
+		return err
+	}
+
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 

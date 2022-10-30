@@ -1,5 +1,8 @@
 package discover
 
 const (
-	Makefile = "Makefile"
+	Makefile   = "Makefile"
+	Dockerfile = "Dockerfile"
+
+	BashArgs = "$*"
 )

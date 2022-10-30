@@ -1,10 +1,12 @@
 package discover
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/ant1k9/auto-launcher/internal/config"
@@ -13,65 +15,82 @@ import (
 )
 
 func Test_prepareCommand(t *testing.T) {
+	dir, _ := os.Getwd()
+	baseDir := filepath.Base(dir)
+
 	tests := []struct {
 		name string
 		ext  string
 		path string
 		want string
+		err  error
 	}{
 		{
 			name: "go command",
 			ext:  ".go",
 			path: "main.go",
-			want: "go run main.go",
+			want: "go run main.go $*",
 		},
 		{
 			name: "rust command",
 			ext:  ".rs",
 			path: "main.rs",
-			want: "cargo run",
+			want: "cargo run $*",
 		},
 		{
 			name: "c++ command",
 			ext:  ".cpp",
 			path: "main.cpp",
-			want: "g++ -O2 -std=c++17 -o main *.cpp && ./main",
+			want: "g++ -O2 -std=c++17 -o main *.cpp && ./main $*",
 		},
 		{
 			name: "c command",
 			ext:  ".c",
 			path: "main.c",
-			want: "gcc -O2 -o main *.c && ./main",
+			want: "gcc -O2 -o main *.c && ./main $*",
 		},
 		{
 			name: "Makefile command",
 			ext:  Makefile,
 			path: Makefile,
-			want: "make",
+			want: "make $*",
 		},
 		{
 			name: "python command",
 			ext:  ".py",
 			path: "main.py",
-			want: "python main.py",
+			want: "python main.py $*",
 		},
 		{
 			name: "javascript command",
 			ext:  ".js",
 			path: "main.js",
-			want: "node main.js",
+			want: "node main.js $*",
+		},
+		{
+			name: "docker command",
+			ext:  Dockerfile,
+			path: Dockerfile,
+			want: fmt.Sprintf(
+				"docker build -t %[1]s:local .\ndocker run --rm -ti $* %[1]s:local",
+				baseDir,
+			),
 		},
 		{
 			name: "Unknown command",
 			ext:  ".abc",
 			path: "file.abc",
-			want: "",
+			err:  ErrCommandNotFound,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := prepareCommand(tt.ext, tt.path); got != tt.want {
+			got, err := prepareCommand(tt.ext, tt.path)
+			if got != tt.want {
 				t.Errorf("prepareCommand() = %v, want %v", got, tt.want)
+			}
+			if err != err {
+				t.Errorf("error = %v, want %v", err, tt.err)
 			}
 		})
 	}
