@@ -156,12 +156,12 @@ func main()	{}
 			require.NoError(t, err)
 			defer os.RemoveAll(rootPath)
 
-			err = os.Mkdir(path.Join(rootPath, "test"), 0755)
+			err = os.MkdirAll(path.Join(rootPath, "intermediate", "test"), 0755)
 			require.NoError(t, err)
 
 			for _, p := range []string{
 				path.Join(rootPath, tt.genFilename),
-				path.Join(rootPath, "test", tt.genFilename),
+				path.Join(rootPath, "intermediate", "test", tt.genFilename),
 			} {
 				require.NoError(t,
 					ioutil.WriteFile(p, []byte(tt.genContent), fs.ModePerm),

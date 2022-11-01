@@ -76,7 +76,7 @@ func isExecutable(path string, info fs.FileInfo) bool {
 func getExecutables(root string, cfg config.Config) (map[Extension][]Filename, error) {
 	files := make(map[Extension][]Filename)
 	return files, filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
-		if isSkippedPath(path, cfg) {
+		if isSkippedPath(filepath.Base(path), cfg) {
 			return filepath.SkipDir
 		}
 
