@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_prepareCommand(t *testing.T) {
+func TestPrepareCommand(t *testing.T) {
 	dir, _ := os.Getwd()
 	baseDir := filepath.Base(dir)
 
@@ -101,14 +101,71 @@ func Test_prepareCommand(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("prepareCommand() = %v, want %v", got, tt.want)
 			}
-			if err != err {
+			if tt.err != err {
 				t.Errorf("error = %v, want %v", err, tt.err)
 			}
 		})
 	}
 }
 
-func Test_ChooseExecutable(t *testing.T) {
+func TestPrepareBuildCommand(t *testing.T) {
+	tests := []struct {
+		name       string
+		ext        string
+		path       string
+		executable string
+		want       []string
+		err        error
+	}{
+		{
+			name:       "go command",
+			ext:        ".go",
+			path:       "cmd/main.go",
+			executable: "executable",
+			want:       []string{"go", "build", "-o", "executable", "./cmd/..."},
+		},
+		{
+			name:       "go command nested",
+			ext:        ".go",
+			path:       "main.go",
+			executable: "executable",
+			want:       []string{"go", "build", "-o", "executable", "."},
+		},
+		{
+			name:       "rust command",
+			ext:        ".rs",
+			path:       "main.rs",
+			executable: "executable",
+			want:       []string{"cargo", "install", "--path", "."},
+		},
+		{
+			name:       "Makefile command",
+			ext:        Makefile,
+			path:       Makefile,
+			executable: "executable",
+			want:       []string{"make", "install"},
+		},
+		{
+			name:       "Unknown command",
+			ext:        ".abc",
+			path:       "file.abc",
+			executable: "executable",
+			err:        ErrCommandNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := prepareBuildCommand(tt.ext, tt.path, tt.executable)
+			assert.EqualValues(t, tt.want, got)
+
+			if tt.err != err {
+				t.Errorf("error = %v, want %v", err, tt.err)
+			}
+		})
+	}
+}
+
+func TestChooseExecutable(t *testing.T) {
 	tests := []struct {
 		name        string
 		genFilename string
@@ -149,6 +206,51 @@ func main()	{}
 			content, err := ioutil.ReadFile(".run")
 			require.NoError(t, err)
 			assert.EqualValues(t, tt.want, string(content))
+		})
+	}
+}
+
+func TestChooseBuildCommand(t *testing.T) {
+	tests := []struct {
+		name        string
+		genFilename string
+		genContent  string
+		executable  string
+		want        []string
+	}{
+		{
+			name:        "go executable",
+			genFilename: "main.go",
+			genContent: `
+package main
+
+func main()	{}
+`,
+			executable: "executable",
+			want:       []string{"go", "build", "-o", "executable", "."},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootPath, err := ioutil.TempDir("/tmp", "discover-test")
+			require.NoError(t, err)
+			defer os.RemoveAll(rootPath)
+
+			err = os.Mkdir(path.Join(rootPath, "test"), 0755)
+			require.NoError(t, err)
+
+			require.NoError(t, ioutil.WriteFile(
+				path.Join(rootPath, tt.genFilename),
+				[]byte(tt.genContent),
+				fs.ModePerm,
+			))
+
+			require.NoError(t, os.Chdir(rootPath))
+
+			buildCommand, err := ChooseBuildCommand(tt.executable, config.Config{})
+			require.NoError(t, err)
+
+			assert.EqualValues(t, tt.want, buildCommand)
 		})
 	}
 }

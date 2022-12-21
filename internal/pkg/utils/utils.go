@@ -12,7 +12,7 @@ func RunCommand(exectutable string, args ...string) error {
 	return cmd.Run()
 }
 
-func FatalIfErr(err error) {
+func Must(err error) {
 	if err == nil {
 		return
 	}

@@ -37,9 +37,9 @@ var rootCmd = &cobra.Command{
 		if os.IsNotExist(err) {
 			err = discover.ChooseExecutable(config.GetConfig())
 		}
-		utils.FatalIfErr(err)
+		utils.Must(err)
 
-		utils.FatalIfErr(utils.RunCommand(
+		utils.Must(utils.RunCommand(
 			"/usr/bin/env",
 			append([]string{"bash", discover.RunFile}, args...)...),
 		)

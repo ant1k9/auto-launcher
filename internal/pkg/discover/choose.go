@@ -14,8 +14,6 @@ import (
 	"github.com/gizak/termui/v3/widgets"
 )
 
-const RunFile = ".run"
-
 var (
 	listedPathsPattern = regexp.MustCompile(`\d+\. (.*)`)
 
@@ -25,31 +23,55 @@ var (
 // nolint: maintidx
 func prepareCommand(ext, path string) (string, error) {
 	switch ext {
-	case ".c":
+	case CExtension:
 		cFiles := filepath.Join(filepath.Dir(path), "*.c")
 		return "gcc -O2 -o main " + cFiles + " && ./main " + BashArgs, nil
-	case ".cpp":
+	case CPPExtension:
 		cppFiles := filepath.Join(filepath.Dir(path), "*.cpp")
 		return "g++ -O2 -std=c++17 -o main " + cppFiles + " && ./main " + BashArgs, nil
-	case ".rs":
+	case RustExtension:
 		return "cargo run " + BashArgs, nil
-	case ".py":
+	case PythonExtension:
 		return fmt.Sprintf("python %s %s", path, BashArgs), nil
-	case ".js":
+	case JavaScriptExtension:
 		return fmt.Sprintf("node %s %s", path, BashArgs), nil
-	case ".go":
+	case GoExtension:
 		return fmt.Sprintf("go run %s %s", path, BashArgs), nil
-	case ".sh":
+	case BashExtension:
 		return fmt.Sprintf("bash %s %s", path, BashArgs), nil
-	case ".fish":
+	case FishExtension:
 		return fmt.Sprintf("fish %s %s", path, BashArgs), nil
-	case Makefile, ".mk":
+	case Makefile, MakeExtension:
 		return "make " + BashArgs, nil
 	case Dockerfile:
 		return prepareDockerCommand()
 	default:
 		return "", ErrCommandNotFound
 	}
+}
+
+func prepareBuildCommand(ext, path, name string) ([]string, error) {
+	switch ext {
+	case RustExtension:
+		return []string{"cargo", "install", "--path", "."}, nil
+	case GoExtension:
+		return prepareGoBuildCommand(path, name)
+	case Makefile, MakeExtension:
+		return []string{"make", "install"}, nil
+	default:
+		return nil, ErrCommandNotFound
+	}
+}
+
+func prepareGoBuildCommand(path, name string) ([]string, error) {
+	dir, _ := filepath.Split(path)
+	switch {
+	case len(dir) > 1:
+		dir = "./" + filepath.Join(dir, "...")
+	default:
+		dir = "."
+	}
+	return []string{"go", "build", "-o", name, dir}, nil
 }
 
 func prepareDockerCommand() (string, error) {
@@ -74,10 +96,60 @@ func saveExecutable(ext, path string) error {
 	return ioutil.WriteFile(RunFile, []byte(command), fs.ModePerm)
 }
 
+func ChooseExecutable(cfg config.Config) error {
+	executables, err := getExecutables(".", cfg)
+	if err != nil {
+		return err
+	}
+
+	if len(executables) == 1 {
+		for ext, paths := range executables {
+			if len(paths) == 1 {
+				return saveExecutable(ext, paths[0])
+			}
+		}
+	}
+
+	_, err = chooseExecutableInteractively(executables)
+	return err
+}
+
+func chooseExecutableInteractively(executables map[Extension][]Filename) (any, error) {
+	return chooseInteractively(executables, func(ext, path string) (any, error) {
+		return nil, saveExecutable(ext, path)
+	})
+}
+
+func ChooseBuildCommand(name string, cfg config.Config) ([]string, error) {
+	executables, err := getBuildExecutables(".", cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(executables) == 1 {
+		for ext, paths := range executables {
+			if len(paths) == 1 {
+				return prepareBuildCommand(ext, paths[0], name)
+			}
+		}
+	}
+
+	return chooseBuilderInteractively(executables, name)
+}
+
+func chooseBuilderInteractively(executables map[Extension][]Filename, name string) ([]string, error) {
+	return chooseInteractively(executables, func(ext, path string) ([]string, error) {
+		return prepareBuildCommand(ext, path, name)
+	})
+}
+
 // nolint: maintidx
-func chooseInteractive(executables map[Extension][]Filename) error {
-	if err := ui.Init(); err != nil {
-		return fmt.Errorf("failed to initialize termui: %w", err)
+func chooseInteractively[T any](
+	executables map[Extension][]Filename,
+	resultFn func(ext, path string) (T, error),
+) (result T, err error) {
+	if err = ui.Init(); err != nil {
+		return result, fmt.Errorf("failed to initialize termui: %w", err)
 	}
 	defer ui.Close()
 
@@ -89,12 +161,14 @@ func chooseInteractive(executables map[Extension][]Filename) error {
 		e := <-uiEvents
 		switch e.ID {
 		case "q", "<C-c>":
-			return nil
+			return result, nil
 		case "<Enter>":
 			if m := listedPathsPattern.FindStringSubmatch(widgetsList.Rows[widgetsList.SelectedRow]); len(m) > 0 {
-				return saveExecutable(extensions[widgetsList.SelectedRow], m[1])
+				return resultFn(extensions[widgetsList.SelectedRow], m[1])
 			}
-			return fmt.Errorf("unexpected row data: %s", widgetsList.Rows[widgetsList.SelectedRow])
+			return result, fmt.Errorf(
+				"unexpected row data: %s", widgetsList.Rows[widgetsList.SelectedRow],
+			)
 		case "j", "<Down>":
 			widgetsList.ScrollDown()
 		case "k", "<Up>":
@@ -120,21 +194,4 @@ func prepareWidgetsList(executables map[Extension][]Filename) ([]string, *widget
 	widgetsList.SelectedRowStyle = ui.NewStyle(ui.ColorGreen)
 
 	return extensions, widgetsList
-}
-
-func ChooseExecutable(cfg config.Config) error {
-	executables, err := getExecutables(".", cfg)
-	if err != nil {
-		return err
-	}
-
-	if len(executables) == 1 {
-		for ext, paths := range executables {
-			if len(paths) == 1 {
-				return saveExecutable(ext, paths[0])
-			}
-		}
-	}
-
-	return chooseInteractive(executables)
 }

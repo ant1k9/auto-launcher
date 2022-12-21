@@ -1,8 +1,11 @@
 .PHONY: all
-all: build
 
-build:
-	go build -o ./bin/auto-launcher ./cmd/auto-launcher/main.go
+commands = auto-launcher auto-builder
+
+all: $(commands)
+
+$(commands): %: cmd/%/main.go
+	go build -o ./bin/$@ $<
 
 lint:
 	golangci-lint run

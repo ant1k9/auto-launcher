@@ -87,3 +87,19 @@ func getExecutables(root string, cfg config.Config) (map[Extension][]Filename, e
 		return err
 	})
 }
+
+func getBuildExecutables(root string, cfg config.Config) (map[Extension][]Filename, error) {
+	executables, err := getExecutables(root, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	onlyBuildExecutables := make(map[Extension][]Filename)
+	for ext, filenames := range executables {
+		switch ext {
+		case RustExtension, GoExtension, Makefile, MakeExtension:
+			onlyBuildExecutables[ext] = filenames
+		}
+	}
+	return onlyBuildExecutables, nil
+}

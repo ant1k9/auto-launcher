@@ -28,6 +28,6 @@ var Cmd = &cobra.Command{
 	Use:   "edit",
 	Short: "Edit launcher command",
 	Run: func(_ *cobra.Command, args []string) {
-		utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "vim", discover.RunFile))
+		utils.Must(utils.RunCommand("/usr/bin/env", "vim", discover.RunFile))
 	},
 }
