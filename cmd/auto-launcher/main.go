@@ -13,13 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package main
 
 import (
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/ant1k9/auto-launcher/cmd/auto-launcher/edit"
+	"github.com/ant1k9/auto-launcher/cmd/auto-launcher/rm"
 	"github.com/ant1k9/auto-launcher/internal/config"
 	"github.com/ant1k9/auto-launcher/internal/pkg/discover"
 	"github.com/ant1k9/auto-launcher/internal/pkg/utils"
@@ -44,8 +46,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func main() {
+	rootCmd.AddCommand(edit.Cmd)
+	rootCmd.AddCommand(rm.Cmd)
 	cobra.CheckErr(rootCmd.Execute())
 }

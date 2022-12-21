@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package edit
 
 import (
 	"github.com/spf13/cobra"
@@ -24,14 +24,10 @@ import (
 
 // nolint: gochecknoglobals
 // editCmd represents the edit command
-var editCmd = &cobra.Command{
+var Cmd = &cobra.Command{
 	Use:   "edit",
 	Short: "Edit launcher command",
 	Run: func(_ *cobra.Command, args []string) {
 		utils.FatalIfErr(utils.RunCommand("/usr/bin/env", "vim", discover.RunFile))
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(editCmd)
 }

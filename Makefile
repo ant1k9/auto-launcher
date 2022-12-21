@@ -2,7 +2,7 @@
 all: build
 
 build:
-	go build -o ./bin/auto-launcher main.go
+	go build -o ./bin/auto-launcher ./cmd/auto-launcher/main.go
 
 lint:
 	golangci-lint run
