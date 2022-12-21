@@ -4,7 +4,8 @@
 ### Installation
 
 ```bash
-$ go install github.com/ant1k9/auto-launcher@latest
+$ go install github.com/ant1k9/auto-launcher/cmd/auto-launcher@latest
+$ go install github.com/ant1k9/auto-launcher/cmd/auto-builder@latest
 ```
 
 ### Usage
@@ -14,9 +15,10 @@ $ go install github.com/ant1k9/auto-launcher@latest
 ```bash
 $ auto-launcher
 $ auto-launcher help
-$ auto-launcher edit  # edit .run file to edit command or params
-$ auto-launcher rm    # rm .run file
-$ AUTO_LAUNCHER_CONFIG_PATH=config.example.toml auto-launcher  # use custom config
+$ auto-launcher edit    # edit .run file to edit command or params
+$ auto-launcher rm      # rm .run file
+$ AUTO_LAUNCHER_CONFIG_PATH=config.example.toml auto-launcher   # use custom config
+$ auto-builder https://github.com/melbahja/got                  # build an executable
 ```
 
 ### Supported formats
