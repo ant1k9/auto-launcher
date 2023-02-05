@@ -139,6 +139,13 @@ func TestPrepareBuildCommand(t *testing.T) {
 			want:       []string{"cargo", "install", "--path", "."},
 		},
 		{
+			name:       "rust command",
+			ext:        ".rs",
+			path:       "./cli/src/main.rs",
+			executable: "executable",
+			want:       []string{"cargo", "install", "--path", "cli"},
+		},
+		{
 			name:       "Makefile command",
 			ext:        Makefile,
 			path:       Makefile,

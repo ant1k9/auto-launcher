@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/ant1k9/auto-launcher/internal/config"
 	ui "github.com/gizak/termui/v3"
@@ -53,7 +54,7 @@ func prepareCommand(ext, path string) (string, error) {
 func prepareBuildCommand(ext, path, name string) ([]string, error) {
 	switch ext {
 	case RustExtension:
-		return []string{"cargo", "install", "--path", "."}, nil
+		return prepareRustBuildCommand(path)
 	case GoExtension:
 		return prepareGoBuildCommand(path, name)
 	case Makefile, MakeExtension:
@@ -72,6 +73,17 @@ func prepareGoBuildCommand(path, name string) ([]string, error) {
 		dir = "."
 	}
 	return []string{"go", "build", "-o", name, dir}, nil
+}
+
+func prepareRustBuildCommand(path string) ([]string, error) {
+	pathParts := strings.Split(path, string(os.PathSeparator))
+	for idx := range pathParts {
+		fmt.Println(idx, pathParts[idx])
+		if pathParts[idx] == "src" {
+			return []string{"cargo", "install", "--path", filepath.Join(pathParts[:idx]...)}, nil
+		}
+	}
+	return []string{"cargo", "install", "--path", "."}, nil
 }
 
 func prepareDockerCommand() (string, error) {
