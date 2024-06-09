@@ -122,7 +122,7 @@ func TestPrepareBuildCommand(t *testing.T) {
 			ext:        ".go",
 			path:       "cmd/main.go",
 			executable: "executable",
-			want:       []string{"go", "build", "-o", "executable", "./cmd/..."},
+			want:       []string{"go", "build", "-o", "executable", "./cmd"},
 		},
 		{
 			name:       "go command nested",

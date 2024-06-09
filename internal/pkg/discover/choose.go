@@ -68,7 +68,7 @@ func prepareGoBuildCommand(path, name string) ([]string, error) {
 	dir, _ := filepath.Split(path)
 	switch {
 	case len(dir) > 1:
-		dir = "./" + filepath.Join(dir, "...")
+		dir = "./" + filepath.Join(dir)
 	default:
 		dir = "."
 	}
@@ -78,7 +78,6 @@ func prepareGoBuildCommand(path, name string) ([]string, error) {
 func prepareRustBuildCommand(path string) ([]string, error) {
 	pathParts := strings.Split(path, string(os.PathSeparator))
 	for idx := range pathParts {
-		fmt.Println(idx, pathParts[idx])
 		if pathParts[idx] == "src" {
 			return []string{"cargo", "install", "--path", filepath.Join(pathParts[:idx]...)}, nil
 		}
